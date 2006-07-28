@@ -1,0 +1,1237 @@
+ticket-0916-test 20060331 "Alan" Release
+=====
+
+* Discovered (for Bug #0051) that there was a "access2pacs_username" functions02.inc::own_element() Fixed.
+* .sql file did not contain full phpticket's table schema.
+* config.php had a reference to PACS Access Log. It should be a reference to phpticket/ticket2
+	
+	
+* BUG #0010:
+	RFE: Enable Action searches
+	- Searching in the actions looks like this:
+	SELECT `id` , `ticket_id` , `t_date` , `description` , `user` , `action_type`
+	FROM `phpticket`.`action`
+	WHERE `id`
+	LIKE '%30693%' OR `ticket_id`
+	LIKE '%30693%' OR `t_date`
+	LIKE '%30693%' OR `description`
+	LIKE '%30693%' OR `user`
+	LIKE '%30693%' OR `action_type`
+	LIKE '%30693%' LIMIT 0 , 30
+* BUG #0013:
+	RFE: Send email when $SOMETHING happens
+* BUG #0020:
+	RFE:
+	If any data is left out at the "adding ticket" screen, you will get an error.
+	Hitting the back button will get you back to the "adding ticket" screen,
+	but ALL THE DATA you entered is gone. We should be able to *just* add the missing data
+	instead of having to type the whole ticket again.
+* BUG #0025:
+	RFE:	Interface to add/modify Locations
+* BUG #0026:
+	RFE: 	Closed Tickets should not be allowed to have "add action" stuff
+* BUG #0027:
+	RFE:	Implement search of tickets in a given date/ in between 2 dates. (open/closed/both)
+* BUG #0028:
+	RFE: 	Move to frameless
+* BUG #0029:
+	RFE:	Move to SESSIONS
+* BUG #0038:
+	The new "Edit Input Options" (from eRUDY) doesn't work.
+* BUG #0051:
+	- When taking ownership of a ticket, "ticket.owner" gets set to zero. 
+
+* BUG #0052:
+
+
+* NOTABUG:
+* FIXED:  #0050,
+* OPEN: BUGS: #0010, #0013,#0020,#0025,#0026,#0027,#0028,#0029,#0038
+
+* Released as ticket-0916
+
+
+
+ticket-0915-test 20060328 "SinnerGuarida" Release
+=====
+
+* Removed paramater $page on functions03.inc:: function show_action_data($id,$table,$page,$start_id=0)
+* Clean up PHP-parser errors and warnings
+* Moved "<hr>" in config.php from right after "if ($_SESSION['ticket_user_is_admin']>1){...}" to inside the curly brackets
+* #0049 : Not a bug. I'm just paranoid.
+* #0050:    Alan K Eng - Vocom  <aleng@vocom.com> has found the bug as well. Hoping he might find the problem and help to fix it!
+	Also, clicking on page >[2]  (say, [3] or greater), returns page with no tickets!
+	Tried this: In functions02.inc::list_data(), replaced:
+		$SQL = $SQL . " AND  $status " . $unassigned;
+		$SQL = $SQL . " AND  $status ";
+	with:
+		$SQL = $isclosed . $SQL . " AND  $status " . $unassigned;
+		$SQL = $isclosed . $SQL . " AND  $status ";
+	Doesn't work:
+		An error occured in function "functions02.inc::list_data()::mysql_query()": 
+		"mysql query failed with query_max SELECT `id` FROM `ticket` closed=true& WHERE 1 AND `severity` >=0 AND `status` = 2 "
+* #0050. I figured out what the problem is:
+	When clicking any page number ([2], [3], [4]...), the next page does
+	not know that it has to show only "closed tickets", thus it mixes up
+	closed and open tickets.
+	
+	The solution would be to find a way to pass the "we are listing
+	closed-only tickets" to the listing function
+	(functions2.inc::list_data()) and to the page indexing function
+	(functions01.inc::index_elements()).
+	
+	In top.php , the links to CLOSED add "showclosed=true". Let's make this a parameter to add to URLs.
+		- Added new parameter to functions01.inc::index_elements()  -> $isclosed=""
+		- On functions02.inc::list_data() , added   if ($_GET['showclosed'] == 'true') ... $isclosed = "&showclosed=true";
+		  and then, whenever there is a call for sort , added ".$isclosed" to the URL
+		- On functions01.inc::index_elements() , added    if ($isclosed != "") ... $url_addon = "&showclosed=true";
+		  and then, whenever there is a URL, added  ".$url_addon"
+		  
+	This makes indexing work with closed tickets. Closing bug.
+	
+	
+* BUG #0010:
+	RFE: Enable Action searches
+	- Searching in the actions looks like this:
+	SELECT `id` , `ticket_id` , `t_date` , `description` , `user` , `action_type`
+	FROM `phpticket`.`action`
+	WHERE `id`
+	LIKE '%30693%' OR `ticket_id`
+	LIKE '%30693%' OR `t_date`
+	LIKE '%30693%' OR `description`
+	LIKE '%30693%' OR `user`
+	LIKE '%30693%' OR `action_type`
+	LIKE '%30693%' LIMIT 0 , 30
+* BUG #0013:
+	RFE: Send email when $SOMETHING happens
+* BUG #0020:
+	RFE:
+	If any data is left out at the "adding ticket" screen, you will get an error.
+	Hitting the back button will get you back to the "adding ticket" screen,
+	but ALL THE DATA you entered is gone. We should be able to *just* add the missing data
+	instead of having to type the whole ticket again.
+* BUG #0025:
+	RFE:	Interface to add/modify Locations
+* BUG #0026:
+	RFE: 	Closed Tickets should not be allowed to have "add action" stuff
+* BUG #0027:
+	RFE:	Implement search of tickets in a given date/ in between 2 dates. (open/closed/both)
+* BUG #0028:
+	RFE: 	Move to frameless
+* BUG #0029:
+	RFE:	Move to SESSIONS
+* BUG #0038:
+	The new "Edit Input Options" (from eRUDY) doesn't work.
+* BUG #0049
+	"page index generator" is foobared big time:
+	- It only presents 2 possible pages ([1] [2]) 
+	- the second page links to http://makedon10/devel/ticket2/main.php?current=20&order=DESC&sortby=id&SQL=%20WHERE%201%20%20AND%20`severity`%20>=0%20%20AND%20%20%20`status`%20!=%202
+* BUG #0050:
+	- On Closed Tickets, when there are more than 1 pages (say, 20), clicking on link for PAGE [2] results that links to rest of pages disapear when loading "PAGE 2"
+
+* BUG #0051:
+
+
+* NOTABUG:#0049
+* FIXED:  #0050,
+* OPEN: BUGS: #0010, #0013,#0020,#0025,#0026,#0027,#0028,#0029,#0038,#0049
+
+* Released as ticket-0915
+
+
+
+ticket-0914-test 20060120 "Vuelve La Tira" Release
+=====
+
+* Fixed bug. Line 632 of functions03.inc::edit_option() was
+	print '<BR><BR><FORM METHOD="post" ACTION="'.$GLOBALS['SECOND_PAGE'].'.php?id='.$option_id.'&action=delet&go=1">' / "\n \n";
+  ... resulting in a "divide by zero" when trying to remove an action. Now te line is:
+  	print '<BR><BR><FORM METHOD="post" ACTION="'.$GLOBALS['SECOND_PAGE'].'.php?id='.$option_id.'&action=delet&go=1">' . "\n \n";
+  Backported to -official version.
+* Globaly replaced $_SESSION['username'] with $_SESSION['ticket_username']
+* Globaly replaced $_SESSION['user_is_admin'] with $_SESSION['ticket_user_is_admin']
+* Redoing search.php to:
+	better parametize file
+	search in actions
+	add backticks to table fields in SQL querys
+* search.php . This line MUST have single quotes around  $_POST[frm_query] or query will fail.
+	$search_fields .= "`".$field2search[1]."` REGEXP '$_POST[frm_query]' OR ";
+* Bug #0047:  In functions02.inc::add_element_buttons() , it said "access2pacs_user_is_admin" instead of "ticket_user_is_admin".
+* Removed parameter $page from functions01.inc::show_simple_data()
+* Corrected warnings on  functions01.inc's functions. Warnings b/c parameters received by function were not "used" except... 
+	... to directly print something. Added a bunch of " if ($parameter == "") { $error } "
+* Bug #0048. To solve it,  replaced in search.php line: 
+		get_option_owner("user", $_SESSION['ticket_username']); // , $index);
+	with line:
+		get_option_owner( get_id_from_user($_SESSION['ticket_username'])); // , $index);
+	
+
+* BUG #0010:
+	RFE: Enable Action searches
+	- Searching in the actions looks like this:
+	SELECT `id` , `ticket_id` , `t_date` , `description` , `user` , `action_type`
+	FROM `phpticket`.`action`
+	WHERE `id`
+	LIKE '%30693%' OR `ticket_id`
+	LIKE '%30693%' OR `t_date`
+	LIKE '%30693%' OR `description`
+	LIKE '%30693%' OR `user`
+	LIKE '%30693%' OR `action_type`
+	LIKE '%30693%' LIMIT 0 , 30
+* BUG #0013:
+	RFE: Send email when $SOMETHING happens
+* BUG #0020:
+	RFE:
+	If any data is left out at the "adding ticket" screen, you will get an error.
+	Hitting the back button will get you back to the "adding ticket" screen,
+	but ALL THE DATA you entered is gone. We should be able to *just* add the missing data
+	instead of having to type the whole ticket again.
+* BUG #0025:
+	RFE:	Interface to add/modify Locations
+* BUG #0026:
+	RFE: 	Closed Tickets should not be allowed to have "add action" stuff
+* BUG #0027:
+	RFE:	Implement search of tickets in a given date/ in between 2 dates. (open/closed/both)
+* BUG #0028:
+	RFE: 	Move to frameless
+* BUG #0029:
+	RFE:	Move to SESSIONS
+* BUG #0038:
+	The new "Edit Input Options" (from eRUDY) doesn't work.
+* BUG #0046
+	"Divide by Zero" when trying to remove action.
+* BUG #0047
+	No actions available on displayed ticket!! Where is the menu?
+* BUG #0048
+	On searches, $CURRENT_USER does **not** get selected by default. 
+* BUG #0049
+
+
+* NOTABUG:
+* FIXED: #0046 ,#0047,#0048
+* OPEN: BUGS: #0010, #0013,#0020,#0025,#0026,#0027,#0028,#0029,#0038
+
+* Released as ticket-0914
+
+
+
+ticket-0913-test 20060116 "IndianaDrake" Release
+=====
+
+* Removed functions01.inc::add_new_option_button() for good, as it is not used and it has been commented out for a while.
+* Bug #0044: 
+	on functions01.inc::make_insert_query() , the "close" option had a bad $query. Changed original query making rutine
+	from:
+	case "close":  //close $Element.
+	$query = "UPDATE `$table` SET `".$GLOBALS['CLOSED_FIELD']."` = '"."frm_" .strtolower($GLOBALS['CLOSED_FIELD'])."',";
+	to:
+	case "close":  //close $Element.
+	$frm_closefield = "frm_" .strtolower($GLOBALS['CLOSED_FIELD']);
+	$query = "UPDATE `$table` SET `".$GLOBALS['CLOSED_FIELD']."` = '".$_POST[$frm_closefield]."',";
+* Bug #0045:
+	on functions01.inc::generate_date_dropdown() , the minute and second fields were comemnted out throught the function. 
+
+	
+
+* BUG #0010:
+	RFE: Enable Action searches
+	- Searching in the actions looks like this:
+	SELECT `id` , `ticket_id` , `t_date` , `description` , `user` , `action_type`
+	FROM `phpticket`.`action`
+	WHERE `id`
+	LIKE '%30693%' OR `ticket_id`
+	LIKE '%30693%' OR `t_date`
+	LIKE '%30693%' OR `description`
+	LIKE '%30693%' OR `user`
+	LIKE '%30693%' OR `action_type`
+	LIKE '%30693%' LIMIT 0 , 30
+* BUG #0013:
+	RFE: Send email when $SOMETHING happens
+* BUG #0020:
+	RFE:
+	If any data is left out at the "adding ticket" screen, you will get an error.
+	Hitting the back button will get you back to the "adding ticket" screen,
+	but ALL THE DATA you entered is gone. We should be able to *just* add the missing data
+	instead of having to type the whole ticket again.
+* BUG #0025:
+	RFE:	Interface to add/modify Locations
+* BUG #0026:
+	RFE: 	Closed Tickets should not be allowed to have "add action" stuff
+* BUG #0027:
+	RFE:	Implement search of tickets in a given date/ in between 2 dates. (open/closed/both)
+* BUG #0028:
+	RFE: 	Move to frameless
+* BUG #0029:
+	RFE:	Move to SESSIONS
+* BUG #0038:
+	The new "Edit Input Options" (from eRUDY) doesn't work.
+* BUG #0044
+	On closing a ticket, Ticket's Close Date gets all messed up.
+* BUG #0045
+	On Adding a new ticket, Ticket Open date does not show opening time.
+
+	
+* NOTABUG:
+* FIXED: #0044, #0045
+* OPEN: BUGS: #0010, #0013,#0020,#0025,#0026,#0027,#0028,#0029,#0038,
+
+* Released as ticket-0912a
+
+
+
+ticket-0912-test 20051230 "Home dels Nassos" Release
+=====
+
+* bug #0042: Eliminated session_cache_expire() from all places, as it does not work with STABLE server's PHP version
+* modified functions01.inc::make_insert_query() so it nows considers "close" $type, that only modifies STATUS. 
+	This way, I solve  BUG #0043
+
+	
+
+* BUG #0010:
+	RFE: Enable Action searches
+	- Searching in the actions looks like this:
+	SELECT `id` , `ticket_id` , `t_date` , `description` , `user` , `action_type`
+	FROM `phpticket`.`action`
+	WHERE `id`
+	LIKE '%30693%' OR `ticket_id`
+	LIKE '%30693%' OR `t_date`
+	LIKE '%30693%' OR `description`
+	LIKE '%30693%' OR `user`
+	LIKE '%30693%' OR `action_type`
+	LIKE '%30693%' LIMIT 0 , 30
+* BUG #0013:
+	RFE: Send email when $SOMETHING happens
+* BUG #0020:
+	RFE:
+	If any data is left out at the "adding ticket" screen, you will get an error.
+	Hitting the back button will get you back to the "adding ticket" screen,
+	but ALL THE DATA you entered is gone. We should be able to *just* add the missing data
+	instead of having to type the whole ticket again.
+* BUG #0025:
+	RFE:	Interface to add/modify Locations
+* BUG #0026:
+	RFE: 	Closed Tickets should not be allowed to have "add action" stuff
+* BUG #0027:
+	RFE:	Implement search of tickets in a given date/ in between 2 dates. (open/closed/both)
+* BUG #0028:
+	RFE: 	Move to frameless
+* BUG #0029:
+	RFE:	Move to SESSIONS
+* BUG #0038:
+	The new "Edit Input Options" (from eRUDY) doesn't work.
+* BUG #0041:
+	Prevent timeout of sessions, as this causes page expirations and, sometimes, data entered on ACTION gets lost.
+* BUG #0042:
+	Tried to prevent Login TimeOut using function  session_cache_expire(). 
+	session_cache_expire() gets rid of the session expiration issue[*] . The 
+	problem is that STABLE's version of PHP does not implement this core 
+	function.  session_cache_expire() works with PHP 4 >= 4.2.0. STABLE uses 
+	PHP-4.1.2 
+	[*] After $PHP_DEFAULT_VARIABLE minutes of inactivity on a PHP application, 
+	your session will end. If there is information being sent, say, a new action, 
+	this information gets lost because the session identifier used by the current 
+	page has expired. 	
+* BUG #0043:
+	If Description field has text with double-quotes, on closing ticket, text gets cut on first double-quote.
+	
+* NOTABUG:
+* FIXED: #0041,,#0042,#0043
+* OPEN: BUGS: #0010, #0013,#0020,#0025,#0026,#0027,#0028,#0029,#0038
+
+* Released as ticket-0912
+
+
+ticket-0911-test 20051215 "Sergi'n'Castri" Release
+=====
+
+* Fixing  BUG #0039: functions01.inc::get_option_owner() was expecting 2 parameter: $table and $current_value. 
+	First parameter was never used, as "$table" is hard-coded in the code. 
+	Then, on functions02.inc::build_edit_form(), the parameters passed were ($current_value, $tab_index).  This was bad and caused the problem.
+	Removing parameter $table on functions01.inc::get_option_owner() , and testing if it breaks something else. 
+	* Backporting to 0910.
+* Fuxed bug #0040: 
+	Problem with how headers get dealt with in HTML. Corrected with if($update == update) {send_headers() } else { son_not_sent_headers}
+	Corected in action.php and also switched "set_html_headers(blah)" to "do_ticle(blah)" on functions02.inc::edit_element()
+	
+
+* BUG #0010:
+	RFE: Enable Action searches
+	- Searching in the actions looks like this:
+	SELECT `id` , `ticket_id` , `t_date` , `description` , `user` , `action_type`
+	FROM `phpticket`.`action`
+	WHERE `id`
+	LIKE '%30693%' OR `ticket_id`
+	LIKE '%30693%' OR `t_date`
+	LIKE '%30693%' OR `description`
+	LIKE '%30693%' OR `user`
+	LIKE '%30693%' OR `action_type`
+	LIKE '%30693%' LIMIT 0 , 30
+* BUG #0013:
+	RFE: Send email when $SOMETHING happens
+* BUG #0020:
+	RFE:
+	If any data is left out at the "adding ticket" screen, you will get an error.
+	Hitting the back button will get you back to the "adding ticket" screen,
+	but ALL THE DATA you entered is gone. We should be able to *just* add the missing data
+	instead of having to type the whole ticket again.
+* BUG #0025:
+	RFE:	Interface to add/modify Locations
+* BUG #0026:
+	RFE: 	Closed Tickets should not be allowed to have "add action" stuff
+* BUG #0027:
+	RFE:	Implement search of tickets in a given date/ in between 2 dates. (open/closed/both)
+* BUG #0028:
+	RFE: 	Move to frameless
+* BUG #0029:
+	RFE:	Move to SESSIONS
+* BUG #0038:
+	The new "Edit Input Options" (from eRUDY) doesn't work.
+* BUG #0039:
+	Editing ticket, always defaults value to "owner_id = '8'" . As "owner_id" is 8th field, something is wrong.
+* BUG #0040:
+	Problems with headers when updating an existing action. 	
+
+* NOTABUG:
+* FIXED: #0039,#0040
+* OPEN: BUGS: #0010, #0013,#0020,#0025,#0026,#0027,#0028,#0029,#0038,
+
+* Released as ticket-0911
+
+
+
+ticket-0910-test 20050911 "Halloween Release"
+=====
+
+* Added functionality in functions02.inc::build_email__element() and functions02.inc::edit_element(update)
+	so new emails will show a permalink like http://server/ticket/shor.php?id=666
+* Added variable 'ticket_website' to table 'settings' . This variable should held the URL for the ticketing system.
+* The new "Edit System Options" (from eRUDY) doesn't work (BUG #0038)
+* Tons of conde maintenance: variable sanitizing & rationalizing, cleaning up commented out code, etcetera
+* New CSS on top.php, to get IExplorer to show smaller H3.
+* Changed in index.php the "scrollbars" value to "yes". Looks awful, but it works. Kinda.
+* Removed scrollbars again. Changed top.php's links to look more like WebCube project (CSS menu, table, etc)
+	index.php and top.php backported to ticket-0909
+* Modified system of generating "tabindex" on all functions0*.inc that present editable fields
+* On functions03.inc::list_option() --> removed "clickeable column headers", as it is not useable. Also, removed a switch statement with only one option ("default:")
+* On action.php, added header ("Refresh: 2 ....") if action = "updat". (Bug #0021,#0017,#0035)
+* Made possible wrapped "<PRE>" on lists of actions on ticket view
+* Added call to functions01.inc::powered() before all exit() inmstances in config.php., as well as substitute of print "</body></html>";
+
+
+* BUG #0010:
+	RFE: Enable Action searches
+	- Searching in the actions looks like this:
+	SELECT `id` , `ticket_id` , `t_date` , `description` , `user` , `action_type`
+	FROM `phpticket`.`action`
+	WHERE `id`
+	LIKE '%30693%' OR `ticket_id`
+	LIKE '%30693%' OR `t_date`
+	LIKE '%30693%' OR `description`
+	LIKE '%30693%' OR `user`
+	LIKE '%30693%' OR `action_type`
+	LIKE '%30693%' LIMIT 0 , 30
+* BUG #0013:
+	RFE: Send email when $SOMETHING happens
+* BUG #0021:
+	RFE:
+	After adding/editing/deleting action, make page go to http://...main.php?id=$ticket_id
+* BUG #0025:
+	RFE:
+	Interface to add/modify Locations
+* BUG #0026:
+	RFE:
+ 	Closed Tickets should not be allowed to have "add action" stuff
+* BUG #0027:
+	RFE:
+	Implement search of tickets in a given date/ in between 2 dates. (open/closed/both)
+* BUG #0028:
+	RFE:
+	Move to frameless
+* BUG #0029:
+	RFE:
+	Move to SESSIONS
+* BUG #0035:
+	RFE:
+	After updating an action, page go to ticket page in 2 seconds.
+	Also, show button to go to ticket page only, not Action details
+
+* NOTABUG:
+* FIXED:  #0021,#0035,#0017, 
+* OPEN: BUGS: #0010, #0013,#0020,#0025,#0026,#0027,#0028,#0029
+
+* Released as ticket-0910
+
+
+
+ticket-0909-test 20050911 "La Diada release"
+=====
+
+* Created $GLOBALS['DEFAULT_UNASSIGNED']	. Set it to '1' for new tickets marked as "un-assigned.
+	Set it to "0" for ownership to current user.
+* Fixing bug #0020: The only not empty field should be frm_description.
+* Made Action's ticket number editable as well.
+* Imported from eRUDY functions.inc::edit_options(). Needs work, as table stores values in different ways
+* Added show.php, which allows for displaying a single ticket without the need for log in. For this, I added these functions:
+ 	functions01.inc::show_simple_data($id,$page,$start_id=0)
+	functions01.inc::simple_search_by_element_num($element)
+
+
+* BUG #0010:
+	RFE: Enable Action searches
+	- Searching in the actions looks like this:
+	SELECT `id` , `ticket_id` , `t_date` , `description` , `user` , `action_type`
+	FROM `phpticket`.`action`
+	WHERE `id`
+	LIKE '%30693%' OR `ticket_id`
+	LIKE '%30693%' OR `t_date`
+	LIKE '%30693%' OR `description`
+	LIKE '%30693%' OR `user`
+	LIKE '%30693%' OR `action_type`
+	LIKE '%30693%' LIMIT 0 , 30
+* BUG #0013:
+	RFE: Send email when $SOMETHING happens
+* BUG #0017
+	RFE: After adding Action, show ticket page (go back to element with ticket_id)
+* BUG #0020:
+	RFE:
+	If any data is left out at the "adding ticket" screen, you will get an error.
+	Hitting the back button will get you back to the "adding ticket" screen,
+	but ALL THE DATA you entered is gone. We should be able to *just* add the missing data
+	instead of having to type the whole ticket again.
+* BUG #0021:
+	RFE:
+	After adding/editing/deleting action, make page go to http://...main.php?id=$ticket_id
+* BUG #0025:
+	RFE:
+	Interface to add/modify Locations
+* BUG #0026:
+	RFE:
+ 	Closed Tickets should not be allowed to have "add action" stuff
+* BUG #0027:
+	RFE:
+	Implement search of tickets in a given date/ in between 2 dates. (open/closed/both)
+* BUG #0028:
+	RFE:
+	Move to frameless
+* BUG #0029:
+	RFE:
+	Move to SESSIONS
+* BUG #0035:
+	RFE:
+	After updating an action, page go to ticket page in 5 seconds.
+	Also, show button to go to ticket page only, not Action details
+* BUG #0036:
+	User wants possibility of having "Default user" in new ticket as himself.
+* BUG #0037:
+	User wants Problem Description and Contact Info fields reversed in Add Ticket
+
+
+* NOTABUG: #0017,
+* FIXED:  #0036, #0020, #0037,
+* OPEN: BUGS: #0010, #0013, #0017, #0020, #0021,#0025,#0026,#0027,#0028,#0029,#0035
+
+* Released as ticket-0909
+
+
+
+ticket-0908-test 20050819 "Eric release"
+=====
+
+* Added functions.inc::function location_config() for Locations maintenance
+* Added $GLOBALS['STATUS_WAITING'] = 3 on conf.inc. Modifying functions02.inc::list_data() accordingly
+* Upgraded Admin options in config.php to be in table instead of list.
+* Added "Close Ticket" button besides "Return to ticket" button (after adding new action.)
+* In functions02.inc::add_element_buttons() , make "Close Ticket" disapear if we are in the Close Ticket screen
+* Rationalized file conf.inc
+* Added user "Un-Assigned" as user with id #1 , as default user for new tickets.
+* Added "Take Ownership of this Ticket" button and all the un-asigned infrastructure
+* Replaced "Scope" for "Contact Info" in table 'options'
+* Do not show seconds in main listing for Last Update
+* Show only yyyy-mm-dd in main listing for Date
+* Changes in top.php to reflect All/Assigned/Un-assigned tickets.
+* Created GLOBAL variables $GLOBALS['STATUS_UNASSIGNED'] and $GLOBALS['STATUS_ASSIGNED']
+
+
+* BUG #0003:
+	Help Page needs to be updated
+* BUG #0010:
+	RFE: Enable Action searches
+	- Searching in the actions looks like this:
+	SELECT `id` , `ticket_id` , `t_date` , `description` , `user` , `action_type`
+	FROM `phpticket`.`action`
+	WHERE `id`
+	LIKE '%30693%' OR `ticket_id`
+	LIKE '%30693%' OR `t_date`
+	LIKE '%30693%' OR `description`
+	LIKE '%30693%' OR `user`
+	LIKE '%30693%' OR `action_type`
+	LIKE '%30693%' LIMIT 0 , 30
+* BUG #0013:
+	RFE: Send email when $SOMETHING happens
+* BUG #0017
+	RFE: After adding Action, show ticket page (go back to element with ticket_id)
+* BUG #0020:
+	RFE:
+	If any data is left out at the "adding ticket" screen, you will get an error.
+	Hitting the back button will get you back to the "adding ticket" screen,
+	but ALL THE DATA you entered is gone. We should be able to *just* add the missing data
+	instead of having to type the whole ticket again.
+* BUG #0021:
+	RFE:
+	After adding/editing/deleting action, make page go to http://...main.php?id=$ticket_id
+* BUG #0025:
+	RFE:
+	Interface to add/modify Locations
+* BUG #0026:
+	RFE:
+ 	Closed Tickets should not be allowed to have "add action" stuff
+* BUG #0027:
+	RFE:
+	Implement search of tickets in a given date/ in between 2 dates. (open/closed/both)
+* BUG #0028:
+	RFE:
+	Moving to frameless
+* BUG #0029:
+	RFE:
+	Moving to SESSIONS
+* BUG #0030:
+	Problem when updating ticket on functions03.inc, line 688
+* BUG #0035:
+	RFE:
+	After updating an action, page go to ticket page in 5 seconds.
+	Also, show button to go to ticket page only, not Action details
+
+
+* FIXED:   #0003, #0030,
+* OPEN: BUGS: #0003, #0010, #0013, #0017, #0020, #0021,#0025,#0026,#0027,#0028,#0029,#0035
+
+* Released as ticket-0908
+
+
+
+ticket-0907-test 20050815 "Baby release"
+=====
+* removed parameter $page from functions02.inc::edit_element(), and using the appropiate $GLOBAL[''] instead.
+* removed parameter $element from functions02.inc::list_data(), and using the appropiate $GLOBAL[''] instead.
+
+
+
+* BUG #0003:
+	Help Page needs to be updated
+* BUG #0010:
+	RFE: Enable Action searches
+	- Searching in the actions looks like this:
+	SELECT `id` , `ticket_id` , `t_date` , `description` , `user` , `action_type`
+	FROM `phpticket`.`action`
+	WHERE `id`
+	LIKE '%30693%' OR `ticket_id`
+	LIKE '%30693%' OR `t_date`
+	LIKE '%30693%' OR `description`
+	LIKE '%30693%' OR `user`
+	LIKE '%30693%' OR `action_type`
+	LIKE '%30693%' LIMIT 0 , 30
+* BUG #0013:
+	RFE: Send email when $SOMETHING happens
+* BUG #0017
+	RFE: After adding Action, show ticket page (go back to element with ticket_id)
+* BUG #0020:
+	RFE:
+	If any data is left out at the "adding ticket" screen, you will get an error.
+	Hitting the back button will get you back to the "adding ticket" screen,
+	but ALL THE DATA you entered is gone. We should be able to *just* add the missing data
+	instead of having to type the whole ticket again.
+* BUG #0021:
+	RFE:
+	After adding/editing/deleting action, make page go to http://...main.php?id=$ticket_id
+* BUG #0025:
+	RFE:
+	Interface to add/modify Locations
+* BUG #0026:
+	RFE:
+ 	Closed Tickets should not be allowed to have "add action" stuff
+* BUG #0027:
+	RFE:
+	Implement search of tickets in a given date/ in between 2 dates. (open/closed/both)
+* BUG #0028:
+	RFE:
+	Moving to frameless
+* BUG #0029:
+	RFE:
+	Moving to SESSIONS
+* BUG #0030:
+	Problem when updating ticket on functions03.inc, line 688
+* BUG #0035:
+	RFE:
+	After updating an action, page go to ticket page in 5 seconds.
+	Also, show button to go to ticket page only, not Action details
+
+
+* FIXED:
+* OPEN: BUGS: #0003, #0010, #0013, #0017, #0020, #0021,#0025,#0026,#0027,#0028,#0029,#0030,#0035
+
+* Released as ticket-0907
+
+
+
+ticket-0906-test 20050725
+=====
+* Rename functions*.inc.php to functions*.inc
+* Rename conf.inc.php to conf.inc
+* functions01.inc::do_title() and functions01.inc::set_htmlheaders() modified so they can handle "refresh" petitions.
+* Removed parameter "$page" from functions02.inc::add_element_buttons() . Now using $GLOBALS['MAIN_PAGE'] instead
+* Removed parameter "$table" from functions02.inc::build_add_form() . Now using $GLOBALS['MAIN_TABLE'] instead
+* Removed parameter "$table" from functions02.inc::build_edit_form() . Now using $GLOBALS['MAIN_TABLE'] instead
+* Removed parameter "$title" from functions02.inc::add_element_buttons() . Now using $GLOBALS['ELEMENT'] instead
+* Removed 3 blank lines after "New Ticket has been added".functions02.inc::edit_element()
+* Removed "Add New Ticket" button .functions02.inc::edit_element()
+* functions02.inc::add_element_buttons() : changed error message on entering function to reflect now only parameter $id exists
+* Removed parameter "$element" from functions02.inc::build_add_form() . Now using $GLOBALS['ELEMENT'] instead
+* Removed parameter "$page" from functions02.inc::close_element() . Now using $GLOBALS['MAIN_PAGE'] instead
+
+
+* BUG #0003:
+	Help Page needs to be updated
+* BUG #0010:
+	RFE: Enable Action searches
+	- Searching in the actions looks like this:
+	SELECT `id` , `ticket_id` , `t_date` , `description` , `user` , `action_type`
+	FROM `phpticket`.`action`
+	WHERE `id`
+	LIKE '%30693%' OR `ticket_id`
+	LIKE '%30693%' OR `t_date`
+	LIKE '%30693%' OR `description`
+	LIKE '%30693%' OR `user`
+	LIKE '%30693%' OR `action_type`
+	LIKE '%30693%' LIMIT 0 , 30
+* BUG #0012:
+ 	RFE: it would be nice to see when a ticket was last updated without having to open the ticket
+* BUG #0013:
+	RFE: Send email when $SOMETHING happens
+* BUG #0017
+	RFE: After adding Action, show ticket page (go back to element with ticket_id)
+* BUG #0020:
+	RFE:
+	If any data is left out at the "adding ticket" screen, you will get an error.
+	Hitting the back button will get you back to the "adding ticket" screen,
+	but ALL THE DATA you entered is gone. We should be able to *just* add the missing data
+	instead of having to type the whole ticket again.
+* BUG #0021:
+	RFE:
+	After adding/editing/deleting action, make page go to http://...main.php?id=$ticket_id
+* BUG #0025:
+	RFE:
+	Interface to add/modify Locations
+* BUG #0026:
+	RFE:
+ 	Closed Tickets should not be allowed to have "add action" stuff
+* BUG #0027:
+	RFE:
+	Implement search of tickets in a given date/ in between 2 dates. (open/closed/both)
+* BUG #0028:
+	RFE:
+	Moving to frameless
+* BUG #0029:
+	RFE:
+	Moving to SESSIONS
+* BUG #0030:
+	Problem when updating ticket on functions03.inc, line 688
+* BUG #0031:
+	Ater ading one action, button "Go Back to Ticket XXX" is not there anyomore. WTF?
+* BUG #0032:
+	Buttons are missing last letter of "Ticket" and show "Edit Ticke, Delete Ticke, Close Ticke"
+	-Comemted out line "$name = substr($title,0, (strlen($title) -1) ) ;"
+	 and added "$name = $title;" on  functions02.inc::add_element_buttons()
+* BUG #0033:
+	RFE:
+	Re-arrange Ticket Options Button Menu
+* BUG #0034:
+	RFE:
+	On function03.inc::list_action() , make link to action be a link to *EDIT ACTION* , adding to URL: "&action=edit"
+* BUG #0034:
+	RFE:
+	Re-arrange Action Options Button Menu
+* BUG #0035:
+	RFE:
+	After updating an action, page go to ticket page inm 5 seconds.
+	Also, show button to go to ticket page only, not Action details
+
+
+* FIXED:   #0024,#0030, #0031, #0032, #0034
+* OPEN: BUGS: #0003, #0010, #0012, #0013, #0017, #0020, #0021,#0025,#0026,#0027,#0028,#0029,#0030,#0035
+
+* Released as ticket-0906
+
+
+ticket-0905-test 20050705
+=====
+* Move to frameless
+* Move to SESSIONS
+
+
+
+* BUG #0003:
+	Help Page needs to be updated
+* BUG #0010:
+	RFE: Enable Action searches
+* BUG #0012:
+ 	RFE: it would be nice to see when a ticket was last updated without having to open the ticket
+* BUG #0013:
+	RFE: Send email when $SOMETHING happens
+* BUG #0017
+	RFE: After adding Action, show ticket page (go back to element with ticket_id)
+* BUG #0020:
+	RFE:
+	If any data is left out at the "adding ticket" screen, you will get an error.
+	Hitting the back button will get you back to the "adding ticket" screen,
+	but ALL THE DATA you entered is gone. We should be able to *just* add the missing data
+	instead of having to type the whole ticket again.
+* BUG #0021:
+	RFE:
+	After adding/editing/deleting action, make page go to http://...main.php?id=$ticket_id
+* BUG #0025:
+	RFE:
+	Interface to add/modify Locations
+* BUG #0026:
+	RFE:
+ 	Closed Tickets should not be allowed to have "add action" stuff
+* BUG #0027:
+	RFE:
+	Implement search of tickets in a given date/ in between 2 dates. (open/closed/both)
+* BUG #0028:
+	Moving to frameless
+* BUG #0029:
+	Moving to SESSIONS
+
+* FIXED:   #0024,
+* OPEN: BUGS: #0003, #0010, #0012, #0013, #0017, #0020, #0021,#0025,#0026,#0027,#0028,#0029,
+
+* Released as ticket-0905
+
+
+
+
+
+ticket-0904-test 20050615
+=====
+* Start doing something like this for front page main selection (Bug #0018):
+ (this works, after tests on phpMYAdmin)
+
+SELECT LEFT(scope, 20) AS tsco,
+	LEFT(ticket.description, 30) AS tdesc ,
+	ticket.id AS tid,
+	action.t_date AS atdate
+FROM ticket, action
+WHERE ticket_id = ticket.id
+
+
+
+
+* BUG #0003:
+	Help Page needs to be updated
+* BUG #0010:
+	RFE: Enable Action searches
+* BUG #0012:
+ 	RFE: it would be nice to see when a ticket was last updated without having to open the ticket
+* BUG #0013:
+	RFE: Send email when $SOMETHING happens
+* BUG #0017
+	RFE: After adding Action, show ticket page (go back to element with ticket_id)
+* BUG #0020:
+	RFE:
+	If any data is left out at the "adding ticket" screen, you will get an error.
+	Hitting the back button will get you back to the "adding ticket" screen,
+	but ALL THE DATA you entered is gone. We should be able to *just* add the missing data
+	instead of having to type the whole ticket again.
+* BUG #0021:
+	RFE:
+	After adding/editing/deleting action, make page go to http://...main.php?id=$ticket_id
+* BUG #0024:
+	RFE:
+	Increase size for 'Action Description'
+* BUG #0025:
+	RFE:
+	Interface to add/modify Locations
+* BUG #0026:
+	RFE:
+ 	Closed Tickets should not be allowed to have "add action" stuff
+* BUG #0027:
+	RFE:
+	Implement search of tickets in a given date/ in between 2 dates. (open/closed/both)
+
+
+* FIXED:   #0024,
+* OPEN: BUGS: #0003, #0010, #0012, #0013, #0017, #0020, #0021,#0025,#0026,#0027,
+
+* Released as ticket-0904
+
+
+
+ticket-0903-test 20050614
+=====
+* Moved add_element_button() from functions01.inc.php to functions02.inc.php
+* Changed top.php , so header background color changes if it is a "development" application
+
+* BUG #0003:
+	Help Page needs to be updated
+* BUG #0010:
+	RFE: Enable Action searches
+* BUG #0012:
+ 	RFE: it would be nice to see when a ticket was last updated without having to open the ticket
+* BUG #0013:
+	RFE: Send email when $SOMETHING happens
+* BUG #0016:
+	RFE: A "Close Ticket" button that sets the ticket to closed and gives one last text box to enter resolution
+	-Adding functions02.inc.php::close_element()
+
+* FIXED:   #0016
+* OPEN: BUGS: #0003, #0010, #0012, #0013,
+
+* Released as ticket-0903
+
+
+
+ticket-0902-test 20050610
+=====
+*
+* BUG #0003:
+	Help Page needs to be updated
+* BUG #0010:
+	Enable Action searches
+* BUG #0012:
+ 	RFE: it would be nice to see when a ticket was last updated without having to open the ticket
+* BUG #0013:
+	RFE: Send email when $SOMETHING happens
+* BUG #0014:
+	RFE: Allow seeing ticket number
+* BUG #0015:
+	RFE: Allow searching by ticket number
+* BUG #0016:
+	RFE: A "Close Ticket" button that sets the ticket to closed and gives one last text box to enter resolution
+* BUG #0017:
+	RFE: Create "unassigned" user.
+* BUG #0018:
+	Current user not selected by default when adding a new ticket.
+
+* FIXED: #0014, #0015, #0017, #0018
+* OPEN: BUGS: #0003, #0010, #0012, #0013, #0016
+
+* Released as ticket-0902
+
+
+ticket-0901-test 20050610
+=====
+* Created $GLOBALS['MAIN_PAGE'] and $GLOBALS['SECOND_PAGE']	on conf.inc.php .
+* Use those 2 globals as much as possible.
+*
+
+* BUG #0003:
+	Help Page needs to be updated
+* BUG #0010:
+	Enable Action searches
+* BUG #0011:
+	From ticket2 at makedon. Chris says that cannot search by user.
+	Improved search: now, when search temrs = EMPTY, uses search "WHERE 1"
+
+* FIXED: #0011
+* OPEN: BUGS: #0003, #0010
+
+* Released as ticket-0901
+
+ticket-0900-test 20050606 "D-Day Release"
+=====
+* BUG #0003:
+	Help Page needs to be updated
+* BUG #0004:
+	At release/update previous old phpTicket: change field 'ticket::location' from varchar-30 to tinyint
+* BUG #0005:
+	At release/update previous old phpTicket: update options
+* BUG #0006:
+	Add to search results 'owner' column.
+* BUG #0007:
+	Improve search.php *a lot* . Solve multiple search issues (SQL, not using brackets)
+* BUG #0008:
+	Made "Go back to Ticket ###" after editing/viewing a ticket, instead of gong back to Main Ticket List
+* BUG #0009:
+	Remove "Action Type" in different Action Listings
+* BUG #0010:
+	Enable Action searches
+
+
+* FIXED: #0004, #0005, #0006, #0007, #0008, #0009,
+* OPEN: BUGS: #0003, #0010,
+
+* Released as ticket-0900
+
+ticket2-test 20050422
+=====
+* Copied the whole access2pacs-0.19 project as devel/ticket2
+* changed accesslog.php to action.php
+* changed contents of conf.inc.php to reflect different database, plus ticket global vars, as in latest ticket version.
+* Made sure that Status uses "1" ad "2"
+* Changed "Show Tickets" in top.php to "Open Tickets"
+* Editing tickets, modified to show all date-time fields as fully editable text, size-limited.
+* Made Severity, Location and Status have same "squema" on options table.
+	Thus, all use same retrieval/search/update functions
+
+* BUG #0001:
+	On editing a ticket, OWNER dropdown shows wrong owner, like "owner +1".
+* BUG #0002:
+	Search Page needs to be improved
+* BUG #0003:
+	Help Page needs to be updated
+
+* FIXED: #0001, #0002
+* OPEN: BUGS: #0003
+
+
+
+0.19-test 20050512
+=====
+* On functions02.inc.php::edit_element(), changed default value of $table from "Patients" to not having default value.
+* Dividing Functions among functions01.inc.php, functions02.inc.php and functions03.inc.php .
+	01 contains 'common' fuctions.
+	02 contains 'element' fuctions.
+	03 contains 'option' fuctions.
+* The RFE #0035 implies to rebuild the users thing. This way, we will have:
+	admin = 0 : Read-Only user
+	admin = 1 : Read-and-Write user
+	admin = 2 : True Administrator
+* Working on variating the requirements for admin. Changing code around the .php files:
+	From "if (!$_SESSION['user_is_admin'])"
+	to "if ($_SESSION['user_is_admin']<2)"
+* Working on variating the requirements for admin. Changing code around the .php files:
+	On both main.php and access2pacs.php , on edit/update/delete functions, added requisite:
+	"if ($_SESSION['user_is_admin']>1)"	 (you can do stuff) "else" (you get a warning)
+* Modified Functions01.inc.conf::user_config() , to adapt to usertypes: Admin, Normal, Read-Only
+* Modified Functions01.inc.conf::list_users() , to adapt to usertypes: Admin, Normal, Read-Only
+* Modified functions01.conf.php:  Changed text "functions02.inc.php" to text "functions01.inc.php"
+
+* BUG #0035:
+	RFE: View-only users. From HIPAA Officer.
+* BUG #0036:
+	RFE: Searches
+* BUG #0037:
+	When editing an existing PACSuser, it is not showing drop-downs for fields that have drop-downs
+* BUG #0038:
+	RFE: Add "--" Field to drop-down fields for PACSuser
+* BUG #0039:
+	When modifying existing user, unchecking "is Admin" makes UserType to be zero ('0').
+	Should give options: Admin, Regular User and Read-Only (UserType : '2', '1', '0')
+* BUG #0040:
+	For some reason, Regular USer cannot edit Practices.
+	Fixed, I don't really know why.
+
+* FIXED: #0003, #0004,#0006,#0038,#0035,#0039,#0040,
+* OPEN: BUGS: #0032,#0036,#0037,
+* Released as acess2pacs-0.19
+
+
+
+0.18-test 20050422
+=====
+* Deleted top-orig.php as is not needed
+* Added NOWRAP to label <TD> on function02.inc.php::build_add_options()
+* New field for table Pacs_access::UserActive. Field Yes/No.
+* BUG #0028:
+	RFE: HIPPA Compliance Officer asks for list of Trainers in drop-down menu
+* BUG #0029:
+	RFE: HIPPA Compliance Officer asks for list of Approvers in drop-down menu
+* BUG #0030:
+	RFE: HIPPA Compliance Officer asks for list of Access Levels in drop-down menu
+* BUG #0031:
+	RFE: HIPPA Compliance Officer asks for list of Confidentiality Agreement in drop-down menu
+* BUG #0032:
+	RFE: HIPPA Compliance Officer asks for new table, to keep track of "bi-annual Practice's Users Verification dates"
+* BUG #0033:
+	RFE: HIPPA Compliance Officer asks for a new field in PACSusers, Yes/No field, "ActiveUser"
+*BUG #0034:
+	Detected by HIPPA Compliance Officer in access2pacs-0.16 :
+	"The database does not allow you to enter a user without entering
+	data in all fields. ?I have one user who has completed a portion of the
+	requirements but I cannot enter the data since I do have appropriate
+	data for all fields. ?For instance, this user has signed the CA but has
+	not had training or access initiated. ?I would like to be able to enter
+	what I have to show the others as pending"
+
+* FIXED: #0028, #0029, #0030, #0031, #0033, #0034
+* OPEN: BUGS: #0003, #0004, #0006, #0032,
+* Released as acess2pacs-0.18
+
+
+0.17-test 20050411
+=====
+* Added to PHone Number the default Area Code "252-"
+* Adding new Practice works, except for following bug:
+* Re-arranged all if ($debug) on accesslog.php
+* Re-arranged Changelog.
+	first goes comments (like this),
+	next goes new bug (* BUG #0000:),
+	next FIXED/OPEN bugs
+	and last, ReleaseVersion
+* Added function02.inc.php::add_option_buttons() , with buttons for View single option.
+* Modiffied function02.inc.php::add_element_buttons() , to include button for adding new option (new PACSuser to Practice)
+* Added new vars to main.php, intended for adding new $option to this $element:
+	$option_table=""; $option_title=""; $option_id=""; $option_element="";
+* Discarded previous 3 entries. All simplidied by adding button right before PACSusers list's title.
+* Added function02.inc.php::add_new_option_button($id, $option_table, $option_element) to build a button
+* Added $element_id to edit_option() and build_add_option(), to make possible to directly add a new user to an existing Pracice
+* New "settings" : INSERT INTO `settings` VALUES (13, 'organization', 'Your Company, Inc');
+* BUG #0021:
+	On adding new Practice, it shows the section "Users belonging to this Practice". It shouldn't.
+* BUG #0022:
+  -Editing an existing Practice, throws this error:
+	"Updating Practice #4
+	Practice has been updated
+	Warning: Missing argument 5 for show_data() in /var/www/html/devel/access2pacs/functions02.inc.php on line 2135"
+
+  -Update: same problem while trying to delete Practice without providing reason:
+	Deleting Practice #4
+	No reason given for removal of Practice: '4'.
+	Try again.
+	Warning: Missing argument 5 for show_data() in /var/www/html/devel/access2pacs/functions02.inc.php on line 2154"
+
+  -Update: same problem Editing an existing PACSuser:
+	"Warning: Missing argument 5 for show_data() in /var/www/html/devel/access2pacs/functions02.inc.php on line 2154"
+* BUG #0023:
+  -Deleting an existing Practice, is confusing. Note the commas separating spaces in 3rd line:
+	"Deleting Practice #4
+	Confirm deletion of Practice #4
+	", , , , "
+	Delete Practice #4 ?  	  Yes, delete this Practice"
+* BUG #0024:
+	After successfuly deleting a Practice, it shows the section "Users belonging to this Practice". It shouldn't.
+* BUG #0025:
+	PACSusers list shows as a link the Practice name. This is confusing. Should link lastname, firstanme
+* BUG #0026:
+	Editing a PACSuser shows "Editing Users..."
+	Should show "Editing User..."
+* BUG #0027:
+	On Delete Practices, there should be a CANCEL button.
+
+
+* FIXED: BUG: #0021, #0022, #0023, #0024, #0025, #0026, #0027, #0021
+* OPEN: BUGS: #0003, #0004, #0006,
+* Released as acess2pacs-0.17
+
+0.16-test 20050411
+=====
+* revision of BUG #0017:
+	seems like it was missing '$element' field on calling function02.ic.php::edit_option()
+	also, there was on update entry the need for frm_value to be not empty. Now it requires frm_ApprovedBy not empty
+* BUG #0018:
+	Adding PACSuser shows Practice ID instead of Practice Name in PACSusers list.
+	Also, when finished adding PACSuser, same problem.
+	Problem corrected: using list_data() instead of list_pacs_a()
+* Renamed functions02.inc.php::list_pacs_a() to functions02.inc.php::list_option()
+* BUG #0019:
+	On editing PACSuser, no Practices drop-down
+* BUG #0020:
+	On editing PACSuser, Practices drop-down not selecting Pracice detailed in database
+
+* FIXED: BUG: #0017, #0018, #0005, #0013, #0014, #0019, #0020,  #0015,
+* OPEN: BUGS: #0003, #0004, #0006,
+* Released as acess2pacs-0.16
+
+0.15-test 20050407
+=====
+* BUG #0014:
+  Adding PACSuser, fields are not there
+* BUG #0015:
+  Editing PACSuser, fields are of limited size.
+* Deleted functions02.inc.php::list_data_orig()
+* Deleted big chunks of commented code from list_data(), list_pacs_a()
+* BUG #0016:
+	functions02.inc.php::get_pointer() is not working
+* Commented out variables ($altertext, $lofield) on (get_option(), get_pointer()) :  they were not used in the functions.
+* BUG #0017:
+	 Missing 'value' field for the update of Users: '0'.
+	 Try again.
+	 Warning: Missing argument 5 for edit_option() in /var/www/html/devel/access2pacs/functions02.inc.php on line 691
+
+* FIXED: BUG: #0016 ,
+* Released as acess2pacs-0.15
+
+0.14-test 20050405
+=====
+* 'Megan' release
+* Changed ChangeLog to reflect bug numbers
+* Add Practice: more instructions for user entry.
+* Added $start_id var to functions02.inc.php::show_data() . This is to hide all of index fields.
+* Added $element var to  functions02.inc.php::edit_option($id,$action,$table,$page,$element). Modified accesslog.php
+* Changed functions02.inc.php::mysql_next_shutdown() to mysql_shutdown_next()
+* ordered  functions by name on functions02.inc.php
+* BUG #0013:
+   On sending info after editing a PACSuser:
+     Missing 'value' field for the update of Users: '1'.
+     Try again.
+     Warning: Missing argument 5 for edit_option() in /var/www/html/devel/access2pacs/functions02.inc.php on line 686
+
+* FIXED: BUG #0007, #0010, #0009, #0001, #0002,
+* Released as acess2pacs-0.14
+
+
+0.13-Test 20050403
+=====
+* Main page (frame) now is main.php
+* Changed order of links on top.php: Practices go first
+* Added functions02.inc.php::get_practice() based on ticket-deve::functions02.inc.php::get_user()
+* Add $table_fields values to table `options`
+* Modify functions02.inc.php::list_pacs_a() so it can use $table_fields
+* BUG #0007
+  'Comments' on Users list: Is centered and no-wrap and no limited.
+* BUG #0008
+  remote users listing is broken with $table_data non NULL:
+    "Fatal error: Call to undefined function: get_owner() in /var/www/html/devel/access2pacs/functions02.inc.php on line 1367"
+* BUG #0009:
+  selecting Pacs_user for individual view shows field names as fieldnames instead of long/short description
+* BUG #0010:
+  Selecting Practice for individual view shows field names as fieldnames instead of long/short description
+* BUG #0011:
+  Editing existing pracice doesn NOT work: wrong field names
+* BUG #0012:(NOTABUG)
+  Viewing one Practice, needs comment field to be multi-line.
+* FIXED: BUG #0008, #0011, #0012 (NOTABUG),
+* Released as access2pacs-0.13
+
+
+0.12-Test 20050401
+======
+* Back to urgent coding mode
+* Changed to *** Comment: From Paula Carrow's HIPAA inventory request*
+* Labels of Practices Display table are wrong!
+  Renamed functions02.inc.php::list_data() to list_data_orig()
+  Inserted list_data() from ticket-devel::functions02.inc.php::
+  Inserted which_fields() from ticket-devel::functions02.inc.php::
+* Changed values of 'settings' table to reflect current app.
+* Display only a part of "Practice Name", as it is too long (functions02.inc.php::list_data() )
+* Replace from table 'settings' the 'abbreviate_affected' entry for  'abbreviate_practice'. Default to 30.
+* Replace from table 'settings' the 'abbreviate_description' entry for 'abbreviate_comments'. Default to 30.
+* Make practice name clickable.
+* added functions02.inc.php::list_pacs_a() ,
+  For listing of PACS Access users.
+  Mod of list_data().
+  Modified  acceslog.php accordingly
+  created 'global $table_fields_pa' to held matrix with fields to show on pacs acces users.
+  No need for $table_fields_pa. Just remove this capability in Practices listing and assing $table_fields to PACSusers
+* Known issues:
+  BUG #0001: Editing existing pracice doesn NOT work: wrong field names
+  BUG #0002: Viewing one Practice, needs comment field to be multi-line.
+  BUG #0003: Need to recreate .sql files
+  BUG #0004 RFE: Viewing a Practice needs "Add authorised user" button.
+  BUG #0005 RFE: Viewing a Practice maybe needs to list (simple) own authorised users. (`a la` action on ticket)
+  BUG #0006 RFE: After finishing adding new Practice proces, it should show list of Practices.
+* Relesed as access2pacs-0.12
+
+
+0.11-Test 20050125
+===================
+
+* Changed from one table at HIPAA Tracker to own database
+* Created own .sql file
+
+0.10-Test 20050124
+===================
+
+* Paula Carrow requests PACS access log application.
+* Copy "SkeletonProject" files to "access2pacs"

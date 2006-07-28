@@ -1,0 +1,41 @@
+Requirements are:
++ A PHP capable webserver (preferably apache: http://www.apache.org)
++ PHP 4.1 or higher.
++ MySQL, 3.x probably works, but 3.23.*/4 is preferred
++ Clients must accept cookies for login info and handle CSS.
+
+
+Installation:
++ If upgrading from previous version, please read "Upgrading" below
++ Move all files to a directory readable by the webserver.
++ Create a database for phpticket, any name would do. Below the name "phpticket" is used.
++ mysql syntax is: echo "CREATE DATABASE phpticket;" |/path/to/mysql/bin/mysql
++ Dump the file phpticket.sql into the new database: /path/to/mysql/bin/mysql phpticket < phpticket.sql
++ Edit conf.inc.php to reflect your mysql settings
++ Login as admin/admin and change administrator password for security
++ Edit any settings from the table 'settings' to fit your needs.
+
+
+Locations:
+* By default, in the 'options' table, there are 3 pre-defined locations (Location 1, Location 2, Location 3).
+* You can edit them to reflect your situation.
+* If you want to add more locations available on the proper drop-down box, make sure you add them like this:
+ - id : (leave it blank, so it will get an auto id number)
+ - orden : (insert a number to reflect the order of appeareance of this location in the drop-down box)
+ - table_data : location
+ - field : (the name of the location to add)
+ - value : (insert a number that identifies the location, for database pourposes)
+
+
+
+Upgrading:
++ To get the latest settings variables, use the "reset" function under Configuration,
+  if not you might get unexpected results and/or miss out on important functions
++ If the database has been modified in the new version (noted in ChangeLog), follow the
+  procedures below to convert the database.
++ WARNING: Depending on previous version this might not work (atleast not without tweak)
++ If you don't want to loose old data, dump the old database and back it up properly
++ Install (i.e. phpticket.sql) the new version in a new database
++ Run mysqldump on old database using the switch "-t" (no-create-info) on tables ticket, action and user
++ Insert the dumped data into the new database and run PHP Ticket to see the results
++ Depending on versions you might not be able to dump all tables
