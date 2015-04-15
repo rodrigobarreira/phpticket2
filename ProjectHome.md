@@ -1,0 +1,1 @@
+phpticket is a ticketing system written in PHP, backed up by a MySQL database. Its purpose is to provide helpdesks/staffs with an easy "to do" application for keeping track of what needs to be done. The interface is kept fairly simple and easy to use. The code is licensed under GPL.
